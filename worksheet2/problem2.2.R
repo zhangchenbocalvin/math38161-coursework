@@ -54,5 +54,5 @@ simulated_data = rmnorm(1000, mu, Sigma)
 
 # draw the scatter plot
 plot(simulated_data, xlim=range(x), ylim=range(x),
-     main="Simulated Data from MVN (d = 2)", xlab="x1", ylab="x2")
+     main="Simulated data from MVN (d = 2)", xlab="x1", ylab="x2")
 
