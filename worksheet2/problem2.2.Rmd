@@ -1,0 +1,84 @@
+---
+title: "Problem 2.2"
+author: "Chen Bo Calvin Zhang"
+date: "13/10/2020"
+output: pdf_document
+---
+
+# Part 1
+
+Plot the density of a bivariate normal distribution with given mean and covariance matrix.
+
+```{r, echo=TRUE}
+library(mnormt) # R package for multivariate normal distribution
+
+# computes the MVN density values
+compute_density = function(x, mu, Sigma) {
+  
+  len = length(x)
+  f = matrix(0, nrow = len, ncol = len)
+  
+  for (i in 1:len) {
+    for (j in 1:len) {
+      f[i, j] = dmnorm(c(x[i], x[j]), mean = mu, var = Sigma)
+    }
+  }
+  
+  return(f)
+}
+
+# specified mean vector and covariance matrix
+mu = c(0,0)
+Sigma = matrix(c(1, .5, .5, 1), 2)
+
+# values for which to compute the density
+x = seq(-5, 5, length.out = 100)
+
+# density function
+f = compute_density(x, mu, Sigma)
+
+# plot the density
+persp(f, col = "gray",
+      theta = 30, phi = 30,
+      xlab = "x1", ylab = "x2", zlab = "f",
+      main = "Density of MVN (d = 2)")
+```
+
+# Part 2
+
+For the same density draw the corresponding contour plot.
+
+```{r, echo=TRUE}
+# plot contour
+contour(x, x, f, xlab = "x1", ylab = "x2",
+        main = "Countour plot of MVN (d = 2)")
+```
+
+# Part 3
+
+Compute the eigenvalues of the covariance matrix and compare the two radii of the contours with
+the square-root of the ratio of the eigenvalues.
+
+```{r, echo=TRUE}
+# compute the eigenvalues
+ev = eigen(Sigma)
+evalues = ev$values
+
+# compare radii of the contours using the sqrt of the ratio of the eigenvalues
+ratio = sqrt(evalues[1]/evalues[2])
+print(ratio)
+```
+
+# Part 4
+
+Simulate data with sample size n = 1000 samples from this bivariate normal and draw the corresponding scatter plot.
+
+```{r, echo=TRUE}
+# simulate sample from the MVN with n = 1000
+simulated_data = rmnorm(1000, mu, Sigma)
+
+# draw the scatter plot
+plot(simulated_data, xlim=range(x), ylim=range(x),
+     main="Simulated Data from MVN (d = 2)", xlab="x1", ylab="x2")
+```
+
