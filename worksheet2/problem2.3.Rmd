@@ -1,0 +1,122 @@
+---
+title: "Problem 2.3"
+author: "Chen Bo Calvin Zhang"
+date: "13/10/2020"
+output: pdf_document
+---
+
+```{r, echo=TRUE}
+# libraries needed for this document
+library("mnormt")
+library("corpcor")
+```
+
+# True model
+
+Create a unit diagonal covariance matrix of dimension $d = 100$.
+
+```{r, echo=TRUE}
+# mean = 0
+mu = numeric(100)
+# covariance matrix is an identity matrix
+Sigma = diag(100)
+```
+
+Compute the true eigenvalues.
+
+```{r, echo=TRUE}
+# compute eigenvalues
+ev = eigen(Sigma)
+evalues = ev$values
+print(evalues)
+```
+
+Simulate data sets of sample size $n = 20$, $n = 50$ and $n = 200$.
+
+```{r, echo=TRUE}
+# simulate data sets of sizes n = 20, n = 50, n = 200
+sim_data1 = rmnorm(n = 20, mu, Sigma)
+sim_data2 = rmnorm(n = 50, mu, Sigma)
+sim_data3 = rmnorm(n = 200, mu, Sigma)
+```
+
+# Model 1 (empirical covariance)
+
+Compute the empirical covariance matrices ($S1.emp$, $S2.emp$, $S3.emp$).
+
+```{r, echo=TRUE}
+# compute the empirical covariance matrices
+S1.emp = cov(sim_data1)
+S2.emp = cov(sim_data2)
+S3.emp = cov(sim_data3)
+```
+
+Compute the corresponding eigenvalues $S1.emp$, $S2.emp$ and $S3.emp$.
+
+```{r, echo=TRUE}
+# compute the eigenvalues
+evalues1 = eigen(S1.emp)$values
+evalues2 = eigen(S2.emp)$values
+evalues3 = eigen(S3.emp)$values
+```
+
+Check the rank and condition.
+
+```{r, echo=TRUE}
+# check the ranks and conditions
+rank.condition(S1.emp)
+rank.condition(S2.emp)
+rank.condition(S3.emp)
+```
+
+Compute the total squared error of the estimated eigenvalues.
+
+```{r, echo=TRUE}
+# compute total squared errors
+mean((evalues1 - evalues)^2)
+mean((evalues2 - evalues)^2)
+mean((evalues3 - evalues)^2)
+```
+
+# Model 2 (regularised estimator)
+
+compute regularised estimates.
+
+```{r, echo=TRUE}
+# compute the regularised estimates
+S1.reg = cov.shrink(sim_data1, verbose = FALSE)
+S2.reg = cov.shrink(sim_data2, verbose = FALSE)
+S3.reg = cov.shrink(sim_data3, verbose = FALSE)
+```
+
+Compute the corresponding eigenvalues.
+
+```{r, echo=TRUE}
+# compute the eigenvalues
+reg_evalues1 = eigen(S1.reg)$values
+reg_evalues2 = eigen(S2.reg)$values
+reg_evalues3 = eigen(S3.reg)$values
+```
+
+Check the rank and condition.
+
+```{r, echo=TRUE}
+# check the ranks and conditions
+rank.condition(S1.reg)
+rank.condition(S2.reg)
+rank.condition(S3.reg)
+```
+
+Compute the total squared error of the estimated eigenvalues.
+
+```{r, echo=TRUE}
+# compute total squared errors
+mean((reg_evalues1 - evalues)^2)
+mean((reg_evalues2 - evalues)^2)
+mean((reg_evalues3 - evalues)^2)
+```
+
+# Conclusions
+Regularised estimates are better than the empirical estiamtes when working with high dimensions and small sample sizes.
+
+From the values of the ranks and the conditions we can also see that the shrinkage covariance is non-singular even for $n<d$.
