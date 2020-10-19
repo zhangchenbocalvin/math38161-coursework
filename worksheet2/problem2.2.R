@@ -32,7 +32,7 @@ x = seq(-5, 5, length.out = 100)
 f = compute_density(x, mu, Sigma)
 
 # plot the density
-persp(f, col = "gray",
+persp(x, x, f, col = "gray",
       theta = 30, phi = 30,
       xlab = "x1", ylab = "x2", zlab = "f",
       main = "Density of MVN (d = 2)")
