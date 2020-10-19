@@ -1,0 +1,59 @@
+---
+title: "Problem 3.2"
+author: "Chen Bo Calvin Zhang"
+date: "19/10/2020"
+output:
+  pdf_document: default
+---
+
+We want to generate a random sample from a multivariate normal distribution, given the number of samples wanted, the mean and the covariance matrix, without relying on mnormt or similar packages.
+
+We will first use the univariate normal random number generator rnorm() availabe in R to create standard
+multivariate normal data. Then we will employ a coloring transformation to transform this data to multivariate normal data with the desired mean and covariance Sigma.
+
+$$E(\boldsymbol{x}) = \boldsymbol{0} \text{ and } Var(\boldsymbol{x}) = \boldsymbol{I} \implies E(\boldsymbol{y}) = \boldsymbol{\mu} \text{ and } Var(\boldsymbol{y}) = \boldsymbol{\Sigma}$$
+And inverse Mahalanobis coloring transformation
+
+$$\boldsymbol{y} = \boldsymbol{\mu} + \boldsymbol{\Sigma}^{-\frac{1}{2}} \boldsymbol{X}$$
+
+```{r, echo=TRUE}
+myrmnorm = function(n, mu, Sigma) {
+  
+  d = length(mu)
+  
+  # generate data using a standard univariate normal random number generator
+  univ_data = rnorm(n * d)
+  # place into a matrix so that it is a a sample from a standard multivariate sample
+  X = matrix(univ_data, nrow = n)
+  
+  # eigendecomposition of Sigma
+  eigen = eigen(Sigma)
+  lambda = eigen$values
+  U = eigen$vectors
+  
+  #inverse square root of Sigma
+  sqrt_Sigma = U %*% diag(lambda^(1/2)) %*% t(U)
+  
+  # make matrix from mu
+  MU = t(replicate(n, mu))
+  # use Mahalanobis coloring transformation to set mean and covariance
+  Y = MU + X %*% sqrt_Sigma
+  
+  return(Y)
+}
+```
+
+Let us test the method with some data.
+
+```{r, echo=TRUE}
+mu = c(1, 2, 3, 4, 5, 6)
+Sigma = matrix(0.8, nrow = 6, ncol = 6)
+diag(Sigma) = c(6, 5, 4, 3, 2, 1)
+
+gen_data = myrmnorm(100, mu, Sigma)
+```
+
+```{r, echo=TRUE}
+print(colMeans(gen_data))
+print(cov(gen_data))
+```
