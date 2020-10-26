@@ -1,0 +1,110 @@
+---
+title: "Problem 4.2"
+author: "Chen Bo Calvin Zhang"
+date: "26/10/2020"
+output: pdf_document
+---
+
+In this problem, we are going to explore the five natural whitening procedures seen in the lectures using a sample of generated data. In particular, we are going to look at ZCA, ZCA-cor, PCA, PCA-cor, and Cholesky.
+
+We will need the following libraries for this problem.
+
+```{r, echo=TRUE}
+library("mnormt")
+library("corpcor")
+library("whitening")
+```
+
+First, we want to generate a synthetic bivariate normal data set with sample size $n = 500$ and with covariance
+matrix $\boldsymbol{\Sigma} = \begin{pmatrix} 2 & 2 \\ 2 & 4 \end{pmatrix}$ and mean zero.
+
+```{r, echo=TRUE}
+mu = c(0, 0)
+Sigma = matrix(c(2, 2, 2, 4), nrow = 2, ncol = 2)
+X = rmnorm(500, mu, Sigma)
+```
+
+We will then use the command whiten() in the R package “whitening” produce 5 different whitened versions of the simulated data set, corresponding to ZCA, ZCA.cor, PCA, PCA.cor and Cholesky whitening.
+
+```{r, echo=TRUE}
+Z.ZCA = whiten(X, method = "ZCA")
+Z.ZCA.cor = whiten(X, method = "ZCA-cor")
+Z.PCA = whiten(X, method = "PCA")
+Z.PCA.cor = whiten(X, method = "PCA-cor")
+Z.Chol = whiten(X, method = "Cholesky")
+```
+
+Now, we have to verify quantitatively that the five methods produce uncorrelated transformed variable. This means that we need to check that the covariance matrices are identities.
+
+```{r, echo=TRUE}
+print(cov(Z.ZCA))
+print(cov(Z.ZCA.cor))
+print(cov(Z.PCA))
+print(cov(Z.PCA.cor))
+print(cov(Z.Chol))
+```
+
+We also want to verify the same thing graphically.
+
+```{r, echo=TRUE}
+par(mfrow = c(2, 3))
+plot(X)
+plot(Z.ZCA)
+plot(Z.ZCA.cor)
+plot(Z.PCA)
+plot(Z.PCA.cor)
+plot(Z.Chol)
+```
+
+Let us inspect the pairwise scatterplots between corresponding components of the original and the transformed data.
+
+```{r, echo=TRUE}
+par(mfrow = c(2, 5))
+plot(X[, 1], Z.ZCA[, 1])
+plot(X[, 2], Z.ZCA[, 2])
+plot(X[, 1], Z.ZCA.cor[, 1])
+plot(X[, 2], Z.ZCA.cor[, 2])
+plot(X[, 1], Z.PCA[, 1])
+plot(X[, 2], Z.PCA[, 2])
+plot(X[, 1], Z.PCA.cor[, 1])
+plot(X[, 2], Z.PCA.cor[, 2])
+plot(X[, 1], Z.Chol[, 1])
+plot(X[, 2], Z.Chol[, 2])
+```
+
+We also need to compute and plot the cross-correlation matrix for all five approaches.
+
+```{r, echo=TRUE}
+Psi.ZCA = cor(Z.ZCA, X)
+Psi.ZCA.cor = cor(Z.ZCA.cor, X)
+Psi.PCA = cor(Z.PCA, X)
+Psi.PCA.cor = cor(Z.PCA.cor, X)
+Psi.Chol = cor(Z.Chol, X)
+
+par(mfrow = c(2, 3))
+image(t(Psi.ZCA), axes = FALSE, main = "ZCA")
+image(t(Psi.ZCA.cor), axes = FALSE, main = "ZCA.cor")
+image(t(Psi.PCA), axes = FALSE, main = "PCA")
+image(t(Psi.PCA.cor), axes = FALSE, main = "PCA.cor")
+image(t(Psi.Chol), axes = FALSE, main = "Chol")
+```
+
+Lastly, we want to demonstrate that ZCA.cor whitening produces the optimal component-wise cross-correlation $Tr(\boldsymbol{\Psi})$ and that PCA.cor whitening produces the optimal compression in terms of squared cross-correlations $Diag(\boldsymbol{\Psi}\boldsymbol{\Psi}^T)$.
+
+```{r, echo=TRUE}
+# demonstrate that ZCA.cor whitening produces
+# the optimal average component-wise cross-correlations
+print(sum(diag(Psi.ZCA)))
+print(sum(diag(Psi.ZCA.cor)))
+print(sum(diag(Psi.PCA)))
+print(sum(diag(Psi.PCA.cor)))
+print(sum(diag(Psi.Chol)))
+
+# demonstrate that PCA.cor whitening produces
+# the optimal compression in terms of squared cross-correlations
+print(rowSums(Psi.ZCA^2))
+print(rowSums(Psi.ZCA.cor^2))
+print(rowSums(Psi.PCA^2))
+print(rowSums(Psi.PCA.cor^2))
+print(rowSums(Psi.Chol^2))
+```
