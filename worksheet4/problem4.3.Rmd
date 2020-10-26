@@ -1,0 +1,86 @@
+---
+title: "Problem 4.3"
+author: "Chen Bo Calvin Zhang"
+date: "26/10/2020"
+output: pdf_document
+---
+
+In this problem, we will conduct a standard PCA using the PCA function available in R and also with code implemented using basic functions. Moreover, we will compare PCA with PCA whitening. The iris flower data set will be used.
+
+First, we need to load the data set. Then we need to centre and standardize it. Lastly we will store the last column (the spcies) as a categorical varible.
+
+```{r, echo=TRUE}
+# load iris data set
+data(iris)
+# centre and stadardise data by considering the first 4 columns as the 5th is categorical
+X = scale(iris[, 1:4], center = TRUE, scale = TRUE)
+# save the 5th column as a categorical variable for the species
+species = iris[, 5]
+```
+
+Now, we perform the PC analysis and print out the results.
+
+```{r, echo=TRUE}
+pca = prcomp(X)
+print(pca)
+```
+
+We need to verify that the principal components are uncorrelated and that the variances are not equal to 1 (as they have not been whitened).
+
+```{r, echo=TRUE}
+print(zapsmall(var(pca$x)))
+```
+
+We then use summary() to get the (cumulative) proportions of variation for each PC and display a graphical visualisation.
+
+```{r, echo=TRUE}
+print(summary(pca))
+plot(pca, type = "l")
+```
+
+We can see that the first two components capture 95% of the variance.
+
+We can now plot the first two components.
+
+```{r, echo=TRUE}
+plot(pca$x[, 1], pca$x[, 2], col = species, xlab="PCA1", ylab="PCA2")
+legend("topright", levels(species), col=1:3, pch=1)
+```
+
+Now, we want to perform the same analysis without the help of the prcomp() function.
+
+```{r, echo=TRUE}
+# compute the PCs without the prcomp() function
+eigen = eigen(cov(X))
+U = eigen$vectors
+lambda = eigen$values
+X.PCA = X %*% U
+```
+
+Let us check the results.
+
+```{r, echo=TRUE}
+print(zapsmall(var(X.PCA))) # PCs
+print(lambda) # variance
+
+# compute the proportions of variation
+print(lambda / sum(lambda))
+# compute the cumulative proportions of variation
+print(cumsum(lambda) / sum(lambda))
+```
+
+Lastly, let us compare the results with PCA whitening.
+
+```{r, echo=TRUE}
+library("corpcor")
+library("whitening")
+Z = whiten(X, method="PCA")
+print(zapsmall(var(Z)))
+
+plot(Z[,1], Z[,2], xlab="Z1", ylab="Z2", main="PCA Whitened Components",
+     col=as.integer(species), pch=as.integer(species)+14)
+legend("topright", levels(species), col=1:3, pch=(1:3)+14 )
+
+imp = rowSums(cor(Z, X)^2)
+print(imp/ sum(imp))
+```
