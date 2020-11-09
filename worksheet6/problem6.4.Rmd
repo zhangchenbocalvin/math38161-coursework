@@ -1,0 +1,42 @@
+---
+title: "Problem 6.4"
+author: "Chen Bo Calvin Zhang"
+date: "09/11/2020"
+output: pdf_document
+---
+
+Import and preprocess the data.
+
+```{r, echo=TRUE}
+data(iris)
+
+# preprocess
+X.iris = scale((iris[, 1:4]), scale=TRUE) # center and standardise
+L.iris = iris[, 5]
+
+table(L.iris)
+
+pairs(X.iris, col=as.integer(L.iris), pch=as.integer(L.iris)+14)
+```
+
+Now, apply a Gaussian Mixture Model (GMM) with G = 3.
+
+```{r, echo=TRUE}
+library("mclust")
+gmm3 = Mclust(X.iris, G=3)
+```
+
+Let us plot the clusters obtained with GMM and compare the resutls to the true labels.
+
+```{r, echo=TRUE}
+plot(gmm3, what="classification")
+print(table(L.iris, gmm3$classification))
+```
+
+Let us apply a GMM with varying values of G and check how the BIC varies.
+
+```{r, echo=TRUE}
+gmm = Mclust(X.iris, G=1:10)
+print(gmm$G) # the optimal number of G
+plot(gmm, what="BIC")
+```
