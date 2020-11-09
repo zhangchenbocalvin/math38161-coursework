@@ -5,7 +5,7 @@ date: "09/11/2020"
 output: pdf_document
 ---
 
-Import and preprocess the data
+Import and preprocess the data.
 
 ```{r, echo=TRUE}
 data(iris)
