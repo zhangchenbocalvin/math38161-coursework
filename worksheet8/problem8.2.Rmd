@@ -1,0 +1,68 @@
+---
+title: "Problem 8.2"
+author: "Chen Bo Calvin Zhang"
+date: "23/11/2020"
+output: pdf_document
+---
+
+We investigate a high-dimensional microarray gene expression data set.
+
+```{r, echo=TRUE}
+library("sda") # R package for shrinkage discriminant analysis
+
+# Singh et al. (2002) gene expression prostate cancer data
+data(singh2002)
+
+Xtrain = singh2002$x
+Ytrain = singh2002$y
+
+print(dim(Xtrain))
+print(levels(Ytrain))
+```
+
+First, let us write a predictor function for SDA that outputs the confusion matrix.
+
+```{r, echo=TRUE}
+predfun.sda = function(Xtrain, Ytrain, Xtest, Ytest, diagonal=FALSE)
+{
+  sda.out = sda(Xtrain, Ytrain, diagonal=diagonal, verbose=FALSE)
+  ynew = predict(sda.out, Xtest, verbose=FALSE)$class
+  
+  cm = confusionMatrix(Ytest, ynew, negative="healthy")
+  
+  return (cm)
+}
+```
+
+Now, perform K-fold cross validation with 5 folds and 50 repeats.
+
+```{r, echo=TRUE}
+library("crossval")
+
+# DDA
+cv.out = crossval(predfun.sda, Xtrain, Ytrain, K=5, B=50, diagonal=TRUE, verbose=FALSE)
+print(cv.out$stat)
+print(diagnosticErrors(cv.out$stat))
+
+# LDA
+cv.out = crossval(predfun.sda, Xtrain, Ytrain, K=5, B=50, diagonal=FALSE, verbose=FALSE)
+print(cv.out$stat)
+print(diagnosticErrors(cv.out$stat))
+```
+
+Finally, select 100 genes from the 6033 genes and perform K-fold cross validation again.
+
+```{r, echo=TRUE}
+best100 = sda.ranking(Xtrain, Ytrain, verbose=FALSE, diagonal=TRUE, fdr=FALSE)[1:100,"idx"]
+print(best100)
+
+# DDA
+cv.out = crossval(predfun.sda, Xtrain[, best100], Ytrain, K=5, B=50, diagonal=TRUE, verbose=FALSE)
+print(cv.out$stat)
+print(diagnosticErrors(cv.out$stat))
+
+# LDA
+cv.out = crossval(predfun.sda, Xtrain[, best100], Ytrain, K=5, B=50, diagonal=FALSE, verbose=FALSE)
+print(cv.out$stat)
+print(diagnosticErrors(cv.out$stat))
+```
