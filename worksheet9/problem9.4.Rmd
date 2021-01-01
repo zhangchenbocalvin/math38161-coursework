@@ -1,0 +1,68 @@
+---
+title: "Problem 9.4"
+author: "Chen Bo Calvin Zhang"
+date: "01/01/2021"
+output: pdf_document
+---
+
+Firstly, let us load the data set and analyse it.
+
+```{r, echo=TRUE}
+library("MASS")
+data(painters)
+
+X.painters = painters[, 1:4]
+print(dim(X.painters))
+
+print(colnames(X.painters))
+
+L.painters = as.factor(painters[, 5]) # school
+print(levels(L.painters))
+
+print(table(L.painters))
+```
+
+Now we find the conditional independence graph relating the four variables. First, we need to compute the correlation matrix.
+
+```{r, echo=TRUE}
+Sigma = cor(X.painters)
+print(Sigma)
+```
+
+Now we can compute the partial correlation matrix by computing the inverse, standardising and negating the off-diagonal elements.
+
+```{r, echo=TRUE}
+Omega = solve(Sigma)
+Rho = -cov2cor(Omega)
+diag(Rho) = - diag(Rho)
+print(Rho)
+```
+
+Values close to zero indicate that the variables are conditionally independent. Values close to one (minus one) mean that the variables are positively (negatively) correlated.
+
+Now we want to check how accurately we can predict the school for each artist. We will use LDA and K-fold cross-validation with 5 folds and 50 repetitions.
+
+```{r, echo=TRUE}
+predfun.lda = function(train.x, train.y, test.x, test.y)
+{
+  lda.fit = lda(train.x, train.y)
+  ynew = predict(lda.fit, test.x)$class
+  acc = mean(ynew == test.y)
+  return(acc)
+}
+
+library("crossval")
+
+cv.out = crossval(predfun.lda, X.painters, L.painters, K=5, B=50, verbose=FALSE)
+print(c(cv.out$stat, cv.out$stat.se))
+```
+
+The accuracy in the prediction is not very high. We can try and predict only artists in school D ("Venetian school").
+
+```{r, echo=TRUE}
+L.venetian = factor(ifelse(L.painters=="D", "Venetian", "other"))
+cv.out = crossval(predfun.lda, X.painters, L.venetian, K=5, B=50, verbose=FALSE)
+print(c(cv.out$stat, cv.out$stat.se))
+```
+
+Here we have a higher accuracy.
