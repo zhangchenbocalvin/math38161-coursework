@@ -1,0 +1,96 @@
+---
+title: "Problem 9.5"
+author: "Chen Bo Calvin Zhang"
+date: "01/01/2021"
+output: pdf_document
+---
+
+Firstly, let us load the data set and analyse it.
+
+```{r, echo=TRUE}
+library("whitening")
+data(forina1986)
+wine.attrib = forina1986$attrib
+wine.type = forina1986$type
+print(dim(wine.attrib))
+print(levels(wine.type))
+print(table(wine.type))
+```
+
+Here are two helper functions we will need for this problem.
+
+```{r, echo = TRUE}
+# function to compute the feature ranking
+# diagonal = TRUE: use t-scores for ranking
+# diagonal = FALSE: ZCA-cor whiten the data, then use t-scores
+library("sda")
+featureRanking = function(train.x, train.y, diagonal=TRUE)
+{
+  return( sda.ranking(train.x, train.y, diagonal=diagonal,
+                      verbose=FALSE, fdr=FALSE, lambda=0, lambda.var=0) )
+}
+
+library("crossval")
+# predictor function for LDA (using sda)
+predfun.lda = function(train.x, train.y, test.x, test.y)
+{
+  # fit sda with zero shrinkage and full covariance (=classic LDA)
+  sda.fit = sda(train.x, train.y, diagonal=FALSE, lambda=0, lambda.var=0, verbose=FALSE)
+  ynew = predict(sda.fit, test.x, verbose=FALSE)$class
+  # compute accuracy
+  out = mean( ynew == test.y)
+}
+```
+
+We want to have a ranking of the predcitors based on the t-scores and the decorrelates t-scores.
+
+```{r, echo=TRUE}
+ranking = featureRanking(wine.attrib, wine.type, diagonal=TRUE)
+ordering = ranking[, "idx"]
+
+print(ranking)
+plot(ranking)
+print(ordering)
+
+ranking.decor = featureRanking(wine.attrib, wine.type, diagonal=FALSE)
+ordering.decor = ranking.decor[, "idx"]
+
+print(ranking.decor)
+plot(ranking.decor)
+print(ordering.decor)
+```
+
+# Now we compute the accuraracy using all subsets of 2 to 27 best features in the LDA predictor.
+
+```{r, echo=TRUE}
+cvmat = matrix(0, 26, 2)
+cvmat.decor = matrix(0, 26, 2)
+
+for (i in 2:27)
+{
+  cv.out = crossval(predfun.lda, wine.attrib[, ordering[1:i]], wine.type,
+                    K=5, B=50, verbose=FALSE)
+  cvmat[i-1,] = c(cv.out$stat, cv.out$stat.se)
+  
+  cv.out = crossval(predfun.lda, wine.attrib[, ordering.decor[1:i]], wine.type,
+                    K=5, B=50, verbose=FALSE)
+  cvmat.decor[i-1,] = c(cv.out$stat, cv.out$stat.se)
+}
+
+plot(2:27, cvmat[, 1], type="l", xlab="Number of predictors",
+     ylab="Accuracy", ylim=c(0.85, 1), main="CV estimates")
+lines(2:27, cvmat.decor[, 1], col=2)
+legend("bottomright", c("t-scores", "decorrelated"), col=1:2, lty=1)
+```
+
+We can see that we can obtain good predictions using 5 or 16 predictors using decorrelated t-scores.
+
+```{r, echo=TRUE}
+cv.out = crossval(predfun.lda, wine.attrib[, ordering.decor[1:5]], wine.type,
+                  K=5, B=50, verbose=FALSE)
+print(c(cv.out$stat, cv.out$stat.se))
+
+cv.out = crossval(predfun.lda, wine.attrib[, ordering.decor[1:16]], wine.type,
+                  K=5, B=50, verbose=FALSE)
+print(c(cv.out$stat, cv.out$stat.se))
+```
