@@ -1,0 +1,48 @@
+---
+title: "Problem 10.1"
+author: "Chen Bo Calvin Zhang"
+date: "02/01/2021"
+output: pdf_document
+---
+
+Let us first load and visualise the data set.
+
+```{r, echo=TRUE}
+# load data set
+library("datasauRus")
+print(dim(datasaurus_dozen)) # 1846 3
+dsname = factor(unlist(datasaurus_dozen[,1]))
+print(levels(dsname))
+
+# plot data sets
+library("ggplot2")
+ggplot(datasaurus_dozen,
+  aes(x = x, y = y, colour = dataset)) +
+  geom_point() +
+  theme_void() +
+  theme(legend.position = "none") +
+  facet_wrap( ~ dataset, ncol = 3)
+```
+
+Now, let us fit a linear model thourgh the data and find some statistics.
+
+```{r, echo=TRUE}
+statistics = matrix(0, ncol=5, nrow=13)
+
+for (i in 1:13)
+{
+  idx = (dsname == levels(dsname)[i])
+  
+  x = unlist(datasaurus_dozen[idx, 2])
+  y = unlist(datasaurus_dozen[idx, 3])
+  
+  statistics[i, 1] = mean(x)
+  statistics[i, 2] = mean(y)
+  statistics[i, 3] = cor(x, y)
+  statistics[i, 4:5] = coefficients(lm(y~x))
+}
+
+print(statistics)
+```
+
+We can observe that all the data sets have very similar means and correlations, and roughly the same coefficient and intercept for the linear model, despite the data looking very different.
