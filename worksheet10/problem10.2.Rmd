@@ -1,0 +1,46 @@
+---
+title: "Problem 10.2"
+author: "Chen Bo Calvin Zhang"
+date: "02/01/2021"
+output: pdf_document
+---
+
+Let us first load the data and the nexessary libraries.
+
+```{r, echo=TRUE}
+# Singh et al. (2002) gene expression prostate cancer data
+library("sda")
+data(singh2002)
+Xtrain = singh2002$x
+Ytrain = singh2002$y
+
+# load randomForest package
+library("randomForest")
+
+# load crossval package
+library("crossval")
+```
+
+First, we need a predictor function for the crossval() function. We will have a random forset with 100 trees.
+
+```{r, echo=TRUE}
+predfun.rf = function(train.x, train.y, test.x, test.y)
+{
+  rf.fit = randomForest(train.x, train.y, ntree=100)
+  ynew = predict(rf.fit, test.x)
+  
+  # count false and true positives/negatives
+  negative = levels(train.y)[2] # "healthy"
+  cm = confusionMatrix(test.y, ynew, negative=negative)
+  return(cm)
+}
+```
+
+Now we run cross-validtion and look at the results.
+
+```{r, echo=TRUE}
+cv.out = crossval(predfun.rf, Xtrain, Ytrain, K=5, B=20, verbose=FALSE)
+print(diagnosticErrors(cv.out$stat))
+```
+
+Random forest performs very well, however it is very computationally intensive.
