@@ -1,2 +1,2 @@
-# MATH38161 Coursework
-Multivariate Statistics &amp; Machine Learning
+# MATH38161 Multivariate Statistics & Machine Learning
+MATH38161 Multivariate Statistics & Machine Learning
